@@ -1,59 +1,99 @@
-// Require the Bolt package (github.com/slackapi/bolt)
-const { App } = require("@slack/bolt");
+const { App } = require('@slack/bolt');
+const axios = require('axios');
 
 const app = new App({
-    token: process.env.SLACK_BOT_TOKEN,
-    signingSecret: process.env.SLACK_SIGNING_SECRET
-});
-
-app.command("/country-info", async ({ ack, say, command }) => {
-    // Acknowledge the command
-    await ack();
-
-    // Extract country name from the command
-    const countryName = command.text;
-
-    // Fetch country information from restcountries.com API
-    const countryInfo = await fetchCountryInfo(countryName);
-
-    // Format and send the information back to Slack
-    if (countryInfo) {
-        const message = formatCountryInfo(countryInfo);
-        await say({ text: message, channel: 'test-agy1960' });
-        await say(`Sorry, could not find information for ${countryName}. Please check the country name and try again.`);
-    }
+  token: process.env.SLACK_BOT_TOKEN,
+  signingSecret: process.env.SLACK_SIGNING_SECRET
 });
 
 // Function to fetch country information from restcountries.com API
 async function fetchCountryInfo(countryName) {
-    try {
-        const response = await axios.get(`https://restcountries.com/v3.1/name/${countryName}`);
+  try {
+    const response = await axios.get(`https://restcountries.com/v3.1/name/${countryName}`);
+    const countryInfo = response.data.find(country => {
+      return country.name.common.toLowerCase() === countryName.toLowerCase() || 
+             country.name.official.toLowerCase() === countryName.toLowerCase();
+    });
+    return countryInfo;
+  } catch (error) {
+    console.error('Error fetching country information:', error);
+    return null;
+  }
+}
 
-        // Check if the request was successful
-        if (response.status === 200) {
-            return response.data[0]; // Assuming the API returns information about the first matching country
-        } else {
-            return null;
-        }
-    } catch (error) {
-        console.error(`Error fetching country information: ${error}`);
-        return null;
+// Slash command in Slack
+app.command('/country-info', async ({ ack, body, client, command }) => {
+  await ack();
+
+  try {
+    const countryName = command.text;
+    const countryInfo = await fetchCountryInfo(countryName);
+    
+    // Error when a country is not found
+    if (!countryInfo) {
+      await client.chat.postEphemeral({
+        user: body.user_id,
+        channel: body.channel_id,
+        text: `:x: Country '${countryName}' not found. Please try again. :x:`
+      });
+      return;
     }
-}
 
-// Function to format country information for display in Slack
-function formatCountryInfo(countryInfo) {
-    const formattedInfo = `*${countryInfo.name.common}*\n`
-        + `Capital: ${countryInfo.capital}\n`
-        + `Language(s): ${Object.keys(countryInfo.languages).join(', ')}\n`
-        + `Currency: ${Object.values(countryInfo.currencies)}\n`
-        + `Country Code: ${countryInfo.cca2}`;
-    // Add more information as needed
-    return formattedInfo;
-}
+    // Extract relevant information from countryInfo
+    const {
+      flags,
+      maps,
+      name,
+      nativeName,
+      population,
+      currencies,
+      capital,
+      subregion,
+      languages,
+      timezones,
+      independent,
+      landlocked
+    } = countryInfo;
 
-// Start the app
+    // Format currency ex. United States Dollar to USD
+    const currencyInfo = Object.keys(currencies).map(currencyCode => `${currencyCode} - ${currencies[currencyCode].name}`);
+
+    // Output results
+    const message = `
+    Here's some quick information about *${name.common}*:
+
+:round_pushpin: Native Name: ${name.official}
+:bust_in_silhouette: Population: ${population.toLocaleString()}
+:coin: Currency/ies: ${currencyInfo.join(', ')}
+:classical_building: Capital/s: ${capital.join(', ')}
+:earth_africa: Subregion: ${subregion}
+:speaking_head_in_silhouette: Language/s: ${Object.values(languages).join(', ')}
+:clock8: Timezone/s: ${timezones.join(', ')}
+    
+*Other information:*
+:diamond_shape_with_a_dot_inside: Independent: ${independent ? 'Yes' : 'No'}
+:mountain: Landlocked: ${landlocked ? 'Yes' : 'No'}
+  
+:world_map: *Google Maps:* ${maps.googleMaps}
+:flag-un: *Flag:* ${flags.png.toLowerCase()}
+    `;
+
+    // Send message with country information
+    await client.chat.postMessage({
+      channel: body.channel_id,
+      text: message,
+      unfurl_links: false
+    });
+  } catch (error) {
+    console.error('Error processing command:', error);
+    await client.chat.postMessage({
+      channel: body.channel_id,
+      text: 'An error occurred while processing the command. Please try again later.'
+    });
+  }
+});
+
 (async () => {
-    await app.start(process.env.PORT || 3000);
-    console.log('⚡️ Bolt app is running!');
+  await app.start(process.env.PORT || 3000);
+  console.log('⚡️ Country lookup app is running!');
 })();
