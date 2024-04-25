@@ -1,0 +1,41 @@
+{
+    "display_information": {
+        "name": "Country Lookup",
+        "description": "A quick way of fetching information about a country",
+        "background_color": "#737373"
+    },
+    "features": {
+        "bot_user": {
+            "display_name": "Country Lookup",
+            "always_online": false
+        },
+        "slash_commands": [
+            {
+                "command": "/country-info",
+                "url": "https://country-lookup-slack.glitch.me/slack/events",
+                "description": "Lookup country",
+                "usage_hint": "<country name>",
+                "should_escape": false
+            }
+        ]
+    },
+    "oauth_config": {
+        "scopes": {
+            "bot": [
+                "channels:history",
+                "chat:write",
+                "commands",
+                "groups:history"
+            ]
+        }
+    },
+    "settings": {
+        "interactivity": {
+            "is_enabled": true,
+            "request_url": "https://obsidian-stone-airbus.glitch.me/slack/events"
+        },
+        "org_deploy_enabled": false,
+        "socket_mode_enabled": false,
+        "token_rotation_enabled": false
+    }
+}
