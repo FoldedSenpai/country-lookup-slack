@@ -113,6 +113,6 @@ app.action('google_maps_button', async ({ body, ack }) => {
 });
 
 (async () => {
-  await app.start(process.env.PORT || 3000);
+  await app.start(process.env.PORT);
   console.log('⚡️ Country Lookup app is running!');
 })();
