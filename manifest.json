@@ -1,7 +1,7 @@
 {
     "display_information": {
         "name": "Country Lookup",
-        "description": "A quick way of fetching information about a country",
+        "description": "A quick way of fetching information about a specific country",
         "background_color": "#737373"
     },
     "features": {
@@ -12,7 +12,7 @@
         "slash_commands": [
             {
                 "command": "/country-info",
-                "url": "https://country-lookup-slack.glitch.me/slack/events",
+                "url": "enter_request_url_here",
                 "description": "Lookup country",
                 "usage_hint": "<country name>",
                 "should_escape": false
@@ -32,7 +32,7 @@
     "settings": {
         "interactivity": {
             "is_enabled": true,
-            "request_url": "https://obsidian-stone-airbus.glitch.me/slack/events"
+            "request_url": "enter_request_url_here"
         },
         "org_deploy_enabled": false,
         "socket_mode_enabled": false,
