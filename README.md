@@ -3,7 +3,6 @@ This is a Slack app that quickly fetches country information from https://restco
 
 This app uses Bolt framework and Block Kit.
 
-
 *INSTRUCTIONS*
 1. Go to https://api.slack.com/apps?new_app=1 to start creating an app and follow prompts.
 2. Use the code from manifest.json to pre-configure up the app.
